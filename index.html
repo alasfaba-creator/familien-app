@@ -1,0 +1,158 @@
+<!doctype html>
+<html lang="de">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <title>Familien-App</title>
+  <meta name="theme-color" content="#2f6f5e">
+  <link rel="manifest" href="manifest.webmanifest">
+  <link rel="icon" href="icons/icon-192.png">
+  <link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-title" content="Familie">
+  <meta name="apple-mobile-web-app-status-bar-style" content="default">
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <div id="app">
+    <!-- Anmeldung -->
+    <section id="login" class="screen hidden">
+      <div class="login-box">
+        <img src="icons/icon-192.png" alt="" class="login-logo">
+        <h1>Familien-App</h1>
+        <p class="muted">Nur für uns zwei.</p>
+        <form id="login-form">
+          <label>E-Mail<input type="email" id="login-email" autocomplete="username" required></label>
+          <label>Passwort<input type="password" id="login-password" autocomplete="current-password" required></label>
+          <button type="submit" class="primary">Anmelden</button>
+          <p id="login-error" class="error"></p>
+        </form>
+      </div>
+    </section>
+
+    <section id="setup" class="screen hidden">
+      <div class="login-box">
+        <h1>Fast fertig</h1>
+        <p>Die App ist noch nicht mit dem Speicher verbunden. Bitte in <code>config.js</code> die Supabase-Werte eintragen (siehe ANLEITUNG.md).</p>
+      </div>
+    </section>
+
+    <!-- Hauptbereich -->
+    <main id="main" class="hidden">
+      <header class="topbar">
+        <h1 id="page-title">Kalender</h1>
+        <span id="sync-dot" class="sync-dot" title="Verbindung"></span>
+      </header>
+
+      <!-- Kalender -->
+      <section id="tab-calendar" class="tab">
+        <div class="month-nav">
+          <button id="prev-month" class="icon-btn" aria-label="Vorheriger Monat">‹</button>
+          <button id="month-label" class="month-label"></button>
+          <button id="next-month" class="icon-btn" aria-label="Nächster Monat">›</button>
+        </div>
+        <div class="weekdays"><span>Mo</span><span>Di</span><span>Mi</span><span>Do</span><span>Fr</span><span>Sa</span><span>So</span></div>
+        <div id="month-grid" class="month-grid"></div>
+        <h2 id="day-label" class="day-label"></h2>
+        <ul id="day-events" class="event-list"></ul>
+        <h2 class="day-label">Demnächst</h2>
+        <ul id="upcoming-events" class="event-list"></ul>
+        <button id="add-event" class="fab" aria-label="Termin hinzufügen">+</button>
+      </section>
+
+      <!-- Einkaufsliste -->
+      <section id="tab-shopping" class="tab hidden">
+        <form id="add-item-form" class="add-item">
+          <input id="item-input" type="text" placeholder="Was brauchen wir?" autocomplete="off" enterkeyhint="done">
+          <input id="qty-input" type="text" placeholder="Menge" autocomplete="off" class="qty">
+          <button type="submit" class="primary" aria-label="Hinzufügen">+</button>
+        </form>
+        <ul id="suggestions" class="suggestions hidden"></ul>
+        <p id="item-error" class="error"></p>
+        <div class="list-actions">
+          <button id="open-catalog" class="ghost">Katalog durchsuchen</button>
+          <button id="clear-checked" class="ghost">Erledigte löschen</button>
+        </div>
+        <div id="shopping-list"></div>
+      </section>
+
+      <!-- Einstellungen -->
+      <section id="tab-settings" class="tab hidden">
+        <div class="card">
+          <h2>Benachrichtigungen</h2>
+          <p id="push-status" class="muted"></p>
+          <button id="enable-push" class="primary">Benachrichtigungen einschalten</button>
+          <button id="test-push" class="ghost">Test an Partner senden</button>
+        </div>
+        <div class="card">
+          <h2>Konto</h2>
+          <p id="who" class="muted"></p>
+          <button id="logout" class="ghost">Abmelden</button>
+        </div>
+        <div class="card">
+          <h2>App installieren</h2>
+          <p class="muted"><b>Samsung / Android:</b> In Chrome oben rechts auf ⋮ tippen, dann „App installieren“.</p>
+          <p class="muted"><b>iPhone:</b> In Safari unten auf das Teilen-Symbol tippen, dann „Zum Home-Bildschirm“. Danach die App über das neue Symbol öffnen.</p>
+        </div>
+      </section>
+
+      <nav class="tabbar">
+        <button data-tab="calendar" class="active"><span class="ti">📅</span>Kalender</button>
+        <button data-tab="shopping"><span class="ti">🛒</span>Einkauf<span id="shop-badge" class="badge hidden"></span></button>
+        <button data-tab="settings"><span class="ti">⚙️</span>Mehr</button>
+      </nav>
+    </main>
+  </div>
+
+  <!-- Termin-Dialog -->
+  <dialog id="event-dialog">
+    <form id="event-form" method="dialog">
+      <h2 id="event-dialog-title">Neuer Termin</h2>
+      <label>Titel<input id="ev-title" required maxlength="120"></label>
+      <label>Datum<input id="ev-date" type="date" required></label>
+      <div class="row">
+        <label>Von<input id="ev-start" type="time"></label>
+        <label>Bis<input id="ev-end" type="time"></label>
+      </div>
+      <label>Notiz<textarea id="ev-note" rows="2" maxlength="500"></textarea></label>
+      <div class="dialog-actions">
+        <button type="button" id="ev-delete" class="danger hidden">Löschen</button>
+        <span class="spacer"></span>
+        <button type="button" id="ev-cancel" class="ghost">Abbrechen</button>
+        <button type="submit" class="primary">Speichern</button>
+      </div>
+    </form>
+  </dialog>
+
+  <!-- Artikel bearbeiten -->
+  <dialog id="item-dialog">
+    <form id="item-form" method="dialog">
+      <h2>Artikel bearbeiten</h2>
+      <label>Name<input id="it-name" required maxlength="80"></label>
+      <label>Menge<input id="it-qty" maxlength="30"></label>
+      <label>Kategorie<select id="it-cat"></select></label>
+      <p id="it-error" class="error"></p>
+      <div class="dialog-actions">
+        <button type="button" id="it-delete" class="danger">Löschen</button>
+        <span class="spacer"></span>
+        <button type="button" id="it-cancel" class="ghost">Abbrechen</button>
+        <button type="submit" class="primary">Speichern</button>
+      </div>
+    </form>
+  </dialog>
+
+  <!-- Katalog -->
+  <dialog id="catalog-dialog" class="sheet">
+    <div class="sheet-head">
+      <h2>Katalog</h2>
+      <button id="catalog-close" class="icon-btn" aria-label="Schließen">✕</button>
+    </div>
+    <div id="catalog-body"></div>
+  </dialog>
+
+  <div id="toast" class="toast hidden"></div>
+
+  <script type="module" src="app.js"></script>
+</body>
+</html>
