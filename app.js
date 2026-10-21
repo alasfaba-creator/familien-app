@@ -65,7 +65,7 @@ function toast(msg) {
   toastTimer = setTimeout(() => t.classList.add("hidden"), 3000);
 }
 async function notify(title, body, tab) {
-  try { await db.functions.invoke("notify", { body: { title, body, tab } }); } catch { /* offline: egal */ }
+  try { await db.functions.invoke("Notify", { body: { title, body, tab } }); } catch { /* offline: egal */ }
 }
 
 // ---------- Anmeldung ----------
