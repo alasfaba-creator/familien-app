@@ -21,13 +21,11 @@ Deno.serve(async (req) => {
   const authHeader = req.headers.get("Authorization") ?? "";
 
   // Wer ruft auf? Nur angemeldete Mitglieder dürfen Benachrichtigungen auslösen.
-  const asUser = createClient(url, Deno.env.get("SUPABASE_ANON_KEY")!, {
-    global: { headers: { Authorization: authHeader } },
-  });
-  const { data: { user } } = await asUser.auth.getUser();
+  const admin = createClient(url, Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!);
+  const token = authHeader.replace(/^Bearer\s+/i, "");
+  const { data: { user } } = await admin.auth.getUser(token);
   if (!user) return new Response("unauthorized", { status: 401, headers: cors });
 
-  const admin = createClient(url, Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!);
   const { data: member } = await admin.from("members").select("display_name")
     .ilike("email", user.email ?? "").maybeSingle();
   if (!member) return new Response("forbidden", { status: 403, headers: cors });
